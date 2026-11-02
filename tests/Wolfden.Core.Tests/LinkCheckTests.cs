@@ -159,8 +159,8 @@ public class LinkCheckTests
     [InlineData("to an unresolved from", 0)]
     [InlineData("universe body", 0)]
     [InlineData("chapter field", 1)]
-    [InlineData("ember default", 2)]
-    [InlineData("series default", 5)]
+    [InlineData("ember default", 1)]
+    [InlineData("series default", 1)]
     [InlineData("outline notes", 0)]
     [InlineData("row chapter 1", 1)]
     [InlineData("row no chapter", 1)]
@@ -193,10 +193,35 @@ public class LinkCheckTests
         Assert.Equal("[[late|lead]]: 'Late' enters canon at ash:2, after this link's position, ember:1. It may be a spoiler.", Message("lead"));
         Assert.Contains("after this link's position, the start of book 'ember'", Message("row no chapter"), StringComparison.Ordinal);
         Assert.Contains("'Moon Born' enters canon at the start of book 'a-quiet-moon'", Message("to a later book"), StringComparison.Ordinal);
-        var defaults = index.Diagnostics.Where(d => d.Path == $"{Ember}/book.md" && d.Diagnostic.Message.Contains("ember default", StringComparison.Ordinal))
-            .Select(d => d.Diagnostic.Message).ToList();
-        Assert.Equal(["chapter ember:2, which inherits this default", "chapter ember:3, which inherits this default"],
-            defaults.Select(m => m[(m.IndexOf("chapter ember", StringComparison.Ordinal))..m.IndexOf(". It may", StringComparison.Ordinal)]));
+    }
+
+    [Fact]
+    [Trait("Scenario", "SC-CHECK-44")]
+    public void ADefaultIsOneSpoilerWarningThatNamesItsChapters()
+    {
+        var index = LinkIndex.Load(SpoilerDen());
+        string Message(string path, string label) => Assert.Single(index.Diagnostics,
+            d => d.Path == path && d.Diagnostic.Message.Contains(label, StringComparison.Ordinal)).Diagnostic.Message;
+
+        Assert.Equal("[[late|ember default]]: 'Late' enters canon at ash:2, after chapters ember:2 and ember:3, which inherit this default. It may be a spoiler.",
+            Message($"{Ember}/book.md", "ember default"));
+        Assert.Equal("[[late|series default]]: 'Late' enters canon at ash:2, after chapters ember:prologue, ember:1, ember:2, ember:3 and ash:1, which inherit this default. It may be a spoiler.",
+            Message($"{LongDark}/series.md", "series default"));
+    }
+
+    [Fact]
+    [Trait("Scenario", "SC-CHECK-44")]
+    public void ADefaultAheadOfMoreThanFiveChaptersNamesTheFirstFive()
+    {
+        var den = Den()
+            .Entity(LongDark, "late", Character("Late", "from: \"ash:2\""))
+            .With($"{Ember}/book.md", "---\nname: Ember\nchapter_defaults: { pov: \"[[late]]\" }\nchapters: [1, 2, 3, 4, 5, 6, 7, 8]\n---\n");
+
+        var warning = Assert.Single(LinkIndex.Load(den).Diagnostics).Diagnostic;
+
+        Assert.Equal("F-LINK-13", warning.RuleId);
+        Assert.Equal("[[late]]: 'Late' enters canon at ash:2, after chapters ember:1, ember:2, ember:3, ember:4, ember:5 and 3 more, which inherit this default. It may be a spoiler.",
+            warning.Message);
     }
 
     [Fact]

@@ -241,16 +241,23 @@ public sealed class LinkIndex
 
             if (spoilerChecks && target.EntersCanon is { } enters)
             {
-                foreach (var position in occurrence.Positions)
+                var ahead = occurrence.Positions.Where(p => !p.Point.IsStartOfStory && enters > p.Point).ToList();
+                foreach (var position in ahead.Where(p => p.Chapter is null))
                 {
-                    if (!position.Point.IsStartOfStory && enters > position.Point)
-                    {
-                        var where = position.Chapter is { } chapter
-                            ? $"chapter {chapter}, which inherits this default"
-                            : $"this link's position, {position.Description}";
-                        Warn(occurrence, "F-LINK-13",
-                            $"{link.Text}: '{target.Name}' enters canon at {target.EntersCanonDescription}, after {where}. It may be a spoiler.");
-                    }
+                    Warn(occurrence, "F-LINK-13",
+                        $"{link.Text}: '{target.Name}' enters canon at {target.EntersCanonDescription}, after this link's position, {position.Description}. It may be a spoiler.");
+                }
+
+                // A link in chapter_defaults is checked for each chapter that inherits it,
+                // but reported once, naming the chapters in story order (types.md F-CHAP-4).
+                var chapters = ahead.Where(p => p.Chapter is not null).OrderBy(p => p.Point).Select(p => p.Chapter!.ToString()).ToList();
+                if (chapters.Count > 0)
+                {
+                    var where = chapters.Count == 1
+                        ? $"chapter {chapters[0]}, which inherits this default"
+                        : $"chapters {ListChapters(chapters)}, which inherit this default";
+                    Warn(occurrence, "F-LINK-13",
+                        $"{link.Text}: '{target.Name}' enters canon at {target.EntersCanonDescription}, after {where}. It may be a spoiler.");
                 }
             }
         }
@@ -273,6 +280,20 @@ public sealed class LinkIndex
             _ => null,
         };
         return field is { Kind: FieldKind.Ref } ? field : null;
+    }
+
+    /// <summary>
+    /// Two or more chapters for an F-LINK-13 message: "a and b", "a, b and c",
+    /// or the first <see cref="LinkResolver.ListedMatches"/> and then "and N more".
+    /// </summary>
+    private static string ListChapters(List<string> chapters)
+    {
+        if (chapters.Count > LinkResolver.ListedMatches)
+        {
+            return $"{string.Join(", ", chapters.Take(LinkResolver.ListedMatches))} and {chapters.Count - LinkResolver.ListedMatches} more";
+        }
+
+        return $"{string.Join(", ", chapters.Take(chapters.Count - 1))} and {chapters[^1]}";
     }
 
     private void Warn(LinkOccurrence occurrence, string rule, string message) =>

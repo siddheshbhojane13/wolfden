@@ -1430,6 +1430,8 @@ checked.
 A link whose target enters canon after the link's position is a [warning],
 since it's usually a spoiler or a mistake (design.md §7). Links with no
 position, or whose position is the start of the story, aren't checked.
+A link in `chapter_defaults` that runs ahead of several chapters is one
+warning that names them (types.md F-CHAP-4).
 
 This check is a spoiler check: it runs only in a den whose `den.yaml` has
 `spoiler_checks: true` (F-DEN-7). It sees links only, not prose. A section

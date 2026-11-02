@@ -733,6 +733,23 @@ field: pov }`.
 Spec: format.md F-CTR-6 (#227). Covered by:
 `ChapterHeadingTests.ProblemsWithTheKeyAreWarnings` (Core).
 
+### SC-CHECK-44. An early default runs ahead of every chapter that inherits it
+
+The series sets `chapter_defaults: { pov: "[[mara-voss]]" }`, but Mara
+doesn't enter canon until Book 2, chapter 2. Every chapter before that
+inherits the default.
+
+- With `spoiler_checks: true`, there's one spoiler warning, on the file
+  that holds the default, not one per chapter. It names the chapters in
+  story order, earliest first.
+- Past five chapters, it names the first five and counts the rest:
+  "after chapters ember:1, ember:2, ember:3, ember:4, ember:5 and 3
+  more". Fixing the one default fixes them all.
+
+Spec: types.md F-CHAP-4, F-LINK-13. Covered by:
+`LinkCheckTests.ADefaultIsOneSpoilerWarningThatNamesItsChapters`,
+`LinkCheckTests.ADefaultAheadOfMoreThanFiveChaptersNamesTheFirstFive`.
+
 ## RT: saving a note keeps what the writer wrote
 
 Background: the files are the writer's, and Wolfden is only one of the

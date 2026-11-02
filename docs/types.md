@@ -865,8 +865,10 @@ link to a character who enters canon after that chapter gets the F-LINK-13
 warning. A link in
 `chapter_defaults` resolves from the scope of the container that holds
 it. It is checked against F-LINK-13 for each chapter whose effective value
-(F-CHAP-5) it is, with that chapter as its position. The warning goes on
-the file that holds the default and names the chapter.
+(F-CHAP-5) it is, with that chapter as its position. Each link in the
+default gets one warning, on the file that holds the default, naming the
+chapters it runs ahead of: the first five in story order, then a count of
+the rest.
 
 **F-CHAP-5.** `universe.md`, `series.md`, and `book.md` MAY have
 `chapter_defaults` (F-CTR-5): a mapping from chapter field name to a plain

@@ -68,8 +68,12 @@ public sealed class TargetResolution
 public sealed class LinkResolver
 {
     private readonly EntityCatalog _catalog;
-    /// <summary>How many matches an F-LINK-7 message lists before "and N more".</summary>
-    private const int ListedMatches = 5;
+    /// <summary>
+    /// How many matches an F-LINK-7 message lists before "and N more". An
+    /// F-LINK-13 message for a <c>chapter_defaults</c> link lists the same
+    /// number of chapters (types.md F-CHAP-4).
+    /// </summary>
+    internal const int ListedMatches = 5;
 
     private readonly Dictionary<Universe, Candidates> _targets = [];
     private readonly Dictionary<Universe, Dictionary<string, string>> _excluded = [];
